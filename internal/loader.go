@@ -41,8 +41,8 @@ type loaderImpl interface {
 	IndexColumnList(string, string) ([]*models.IndexColumn, error)
 }
 
-func NewTypeLoader(l loaderImpl, i Inflector) *TypeLoader {
-	return &TypeLoader{loader: l, inflector: i}
+func NewTypeLoader(l loaderImpl, i Inflector, s *snaker.Initialisms) *TypeLoader {
+	return &TypeLoader{loader: l, inflector: i, snaker: s}
 }
 
 // TypeLoader provides a common Loader implementation used by the built in
@@ -51,6 +51,7 @@ type TypeLoader struct {
 	CustomTypes *models.CustomTypes
 	loader      loaderImpl
 	inflector   Inflector
+	snaker      *snaker.Initialisms
 }
 
 // NthParam satisifies Loader's NthParam.
@@ -260,7 +261,7 @@ func (tl *TypeLoader) LoadColumns(args *ArgType, typeTpl *Type) error {
 
 		// set col info
 		f := &Field{
-			Name: snaker.ForceCamelIdentifier(c.ColumnName),
+			Name: tl.snaker.ForceCamelIdentifier(c.ColumnName),
 			// Name: c.ColumnName,
 			Col: c,
 		}

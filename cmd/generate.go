@@ -60,20 +60,25 @@ var (
 			if err != nil {
 				return fmt.Errorf("load inflection rule failed: %v", err)
 			}
+			snaker, err := internal.NewSnaker(generateOpts.CustomWords)
+			if err != nil {
+				return fmt.Errorf("load initialisms rule failed: %v", err)
+			}
+
 			var loader *internal.TypeLoader
 			if generateOpts.FromDDL {
 				spannerLoader, err := loaders.NewSpannerLoaderFromDDL(args[0])
 				if err != nil {
 					return fmt.Errorf("error: %v", err)
 				}
-				loader = internal.NewTypeLoader(spannerLoader, inflector)
+				loader = internal.NewTypeLoader(spannerLoader, inflector, snaker)
 			} else {
 				spannerClient, err := connectSpanner(&rootOpts)
 				if err != nil {
 					return fmt.Errorf("error: %v", err)
 				}
 				spannerLoader := loaders.NewSpannerLoader(spannerClient)
-				loader = internal.NewTypeLoader(spannerLoader, inflector)
+				loader = internal.NewTypeLoader(spannerLoader, inflector, snaker)
 			}
 
 			// load custom type definitions

@@ -48,19 +48,20 @@ Examples:
   yo $SPANNER_PROJECT_NAME $SPANNER_INSTANCE_NAME $SPANNER_DATABASE_NAME -o models --custom-types-file custom_column_types.yml
 
 Flags:
-      --custom-type-package string   Go package name to use for custom or unknown types
-      --custom-types-file string     custom table field type definition file
-  -h, --help                         help for yo
-      --ignore-fields stringArray    fields to exclude from the generated Go code types
-      --ignore-tables stringArray    tables to exclude from the generated Go code types
-      --inflection-rule-file string  custom inflection rule file
-  -o, --out string                   output path or file name
-  -p, --package string               package name used in generated Go code
-      --single-file                  toggle single file output
-      --suffix string                output file suffix (default ".yo.go")
-      --tags string                  build tags to add to package header
-      --template-path string         user supplied template path
-      --underscore                   toggle underscores in file names
+      --custom-type-package string        Go package name to use for custom or unknown types
+      --custom-types-file string          custom table field type definition file
+  -h, --help                              help for yo
+      --ignore-fields stringArray         fields to exclude from the generated Go code types
+      --ignore-tables stringArray         tables to exclude from the generated Go code types
+      --inflection-rule-file string       custom inflection rule file
+      --initialism-rule-pairs stringSlice custom initialism rule pairs
+  -o, --out string                        output path or file name
+  -p, --package string                    package name used in generated Go code
+      --single-file                       toggle single file output
+      --suffix string                     output file suffix (default ".yo.go")
+      --tags string                       build tags to add to package header
+      --template-path string              user supplied template path
+      --underscore                        toggle underscores in file names
 ```
 
 ## Generated code
@@ -201,6 +202,16 @@ rule yaml file sample is
 ```
 
 See https://github.com/jinzhu/inflection#register-rules for details.
+
+### Custom initialism rule pairs
+
+`yo` use snaker to separate variable name into words internally.
+If you want to add your own rule for initialisms, add `--initialism-rule-pairs` option with string slice.
+The pair format is `
+
+```
+  yo $SPANNER_PROJECT_NAME $SPANNER_INSTANCE_NAME $SPANNER_DATABASE_NAME -o models --initialism-rule-pairs IDSHARD,IDShard
+```
 
 ## Contributions
 

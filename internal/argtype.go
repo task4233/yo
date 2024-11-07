@@ -82,4 +82,7 @@ type ArgType struct {
 
 	// InflectionRuleFile is custom inflection rule file.
 	InflectionRuleFile string
+
+	// CustomWords specifieds conversion rules for words which are not converted correctly.
+	CustomWords []string
 }

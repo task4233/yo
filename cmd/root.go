@@ -73,7 +73,12 @@ var (
 			if err != nil {
 				return fmt.Errorf("load inflection rule failed: %v", err)
 			}
-			loader := internal.NewTypeLoader(spannerLoader, inflector)
+			snaker, err := internal.NewSnaker(rootOpts.CustomWords)
+			if err != nil {
+				return fmt.Errorf("load initialisms rule failed: %v", err)
+			}
+
+			loader := internal.NewTypeLoader(spannerLoader, inflector, snaker)
 
 			// load custom type definitions
 			if rootOpts.CustomTypesFile != "" {
@@ -133,6 +138,7 @@ func setRootOpts(cmd *cobra.Command, opts *internal.ArgType) {
 	cmd.Flags().StringVar(&opts.TemplatePath, "template-path", "", "user supplied template path")
 	cmd.Flags().StringVar(&opts.Tags, "tags", "", "build tags to add to package header")
 	cmd.Flags().StringVar(&opts.InflectionRuleFile, "inflection-rule-file", "", "custom inflection rule file")
+	cmd.Flags().StringSliceVar(&opts.CustomWords, "initialism-rule-pairs", nil, "custom initialism rule pairs")
 
 	helpFn := cmd.HelpFunc()
 	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {

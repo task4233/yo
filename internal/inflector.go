@@ -20,7 +20,7 @@
 package internal
 
 import (
-	"io/ioutil"
+	"os"
 
 	"github.com/gedex/inflector"
 	"github.com/jinzhu/inflection"
@@ -53,7 +53,7 @@ func NewInflector(ruleFile string) (Inflector, error) {
 	if ruleFile == "" {
 		return &DefaultInflector{}, nil
 	}
-	err := registerRule(ruleFile)
+	err := registerInflectorRule(ruleFile)
 	if err != nil {
 		return nil, err
 	}
@@ -65,21 +65,20 @@ type InflectRule struct {
 	Plural   string `yaml:"plural"`
 }
 
-func registerRule(inflectionRuleFile string) error {
-	rules, err := readRule(inflectionRuleFile)
+func registerInflectorRule(inflectionRuleFile string) error {
+	rules, err := readInflectorRule(inflectionRuleFile)
 	if err != nil {
 		return err
 	}
-	if rules != nil {
-		for _, irr := range rules {
-			inflection.AddIrregular(irr.Singuler, irr.Plural)
-		}
+
+	for _, irr := range rules {
+		inflection.AddIrregular(irr.Singuler, irr.Plural)
 	}
 	return nil
 }
 
-func readRule(ruleFile string) ([]InflectRule, error) {
-	data, err := ioutil.ReadFile(ruleFile)
+func readInflectorRule(ruleFile string) ([]InflectRule, error) {
+	data, err := os.ReadFile(ruleFile)
 	if err != nil {
 		return nil, err
 	}
