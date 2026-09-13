@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"cloud.google.com/go/spanner"
+	"github.com/google/uuid"
 	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

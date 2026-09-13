@@ -121,6 +121,14 @@ func parseSpannerType(dt string, nullable bool) (int, string, string) {
 			nilVal = `spanner.NullJSON{}`
 		}
 
+	case "UUID":
+		nilVal = "uuid.UUID{}"
+		typ = "uuid.UUID"
+		if nullable {
+			nilVal = "spanner.NullUUID{}"
+			typ = "spanner.NullUUID"
+		}
+
 	default:
 		if strings.HasPrefix(dt, "ARRAY<") {
 			eleDataType := strings.TrimSuffix(strings.TrimPrefix(dt, "ARRAY<"), ">")

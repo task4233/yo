@@ -31,6 +31,7 @@ import (
 	"cloud.google.com/go/civil"
 	"cloud.google.com/go/spanner"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/uuid"
 	"github.com/googleapis/gax-go/v2/apierror"
 	"go.mercari.io/yo/loaders"
 	"go.mercari.io/yo/test/testmodels/customtypes"
@@ -981,4 +982,79 @@ func extractResourceInfo(st *status.Status) *errdetails.ResourceInfo {
 		}
 	}
 	return nil
+}
+
+func TestUuidTypes(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Import uuid package for testing
+	uuid1 := uuid.MustParse("550e8400-e29b-41d4-a716-446655440001")
+	uuid2 := uuid.MustParse("550e8400-e29b-41d4-a716-446655440002")
+	uuid3 := uuid.MustParse("550e8400-e29b-41d4-a716-446655440003")
+
+	table := map[string]struct {
+		ut *models.UUIDType
+	}{
+		"with_optional_id": {
+			ut: &models.UUIDType{
+				ID:         uuid1,
+				Name:       "test1",
+				OptionalID: spanner.NullUUID{UUID: uuid2, Valid: true},
+				CreatedAt:  time.Now(),
+			},
+		},
+		"without_optional_id": {
+			ut: &models.UUIDType{
+				ID:         uuid3,
+				Name:       "test2",
+				OptionalID: spanner.NullUUID{Valid: false},
+				CreatedAt:  time.Now(),
+			},
+		},
+	}
+
+	for name, tt := range table {
+		t.Run(name, func(t *testing.T) {
+			// Insert
+			m := tt.ut.Insert(ctx)
+			if _, err := client.Apply(ctx, []*spanner.Mutation{m}); err != nil {
+				t.Fatalf("failed to insert: %v", err)
+			}
+
+			// Find by primary key
+			got, err := models.FindUUIDType(ctx, client.Single(), tt.ut.ID)
+			if err != nil {
+				t.Fatalf("failed to find: %v", err)
+			}
+
+			if diff := cmp.Diff(tt.ut.ID, got.ID); diff != "" {
+				t.Errorf("ID: (-want, +got)\n%s", diff)
+			}
+
+			if diff := cmp.Diff(tt.ut.Name, got.Name); diff != "" {
+				t.Errorf("Name: (-want, +got)\n%s", diff)
+			}
+
+			if diff := cmp.Diff(tt.ut.OptionalID, got.OptionalID); diff != "" {
+				t.Errorf("OptionalID: (-want, +got)\n%s", diff)
+			}
+
+			// Find by unique index (Name)
+			gotByName, err := models.FindUUIDTypeByName(ctx, client.Single(), tt.ut.Name)
+			if err != nil {
+				t.Fatalf("failed to find by name: %v", err)
+			}
+
+			if diff := cmp.Diff(got.ID, gotByName.ID); diff != "" {
+				t.Errorf("ID (by name): (-want, +got)\n%s", diff)
+			}
+
+			// Clean up
+			m = tt.ut.Delete(ctx)
+			if _, err := client.Apply(ctx, []*spanner.Mutation{m}); err != nil {
+				t.Fatalf("failed to delete: %v", err)
+			}
+		})
+	}
 }

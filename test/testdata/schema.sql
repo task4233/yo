@@ -119,6 +119,8 @@ CREATE TABLE GeneratedColumns (
 
 CREATE TABLE AllowCommitTimestamp (
   ID INT64 NOT NULL,
+  EndsAt TIMESTAMP OPTIONS (allow_commit_timestamp=true),
+  CreatedAt TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
   UpdatedAt TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true)
 ) PRIMARY KEY(ID);
 
@@ -127,3 +129,13 @@ CREATE TABLE FullTextSearch (
   Content STRING(2048) NOT NULL,
   Content_Tokens TOKENLIST AS (TOKENIZE_FULLTEXT(Content)) HIDDEN,
 ) PRIMARY KEY(ID);
+
+CREATE TABLE UuidTypes (
+  ID UUID NOT NULL,
+  Name STRING(100) NOT NULL,
+  OptionalID UUID,
+  CreatedAt TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
+) PRIMARY KEY(ID);
+
+CREATE UNIQUE INDEX UuidTypesByName ON UuidTypes(Name);
+CREATE INDEX UuidTypesByOptionalID ON UuidTypes(OptionalID);

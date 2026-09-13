@@ -11,6 +11,7 @@ import (
 
 	"cloud.google.com/go/civil"
 	"cloud.google.com/go/spanner"
+	"github.com/google/uuid"
 	"github.com/googleapis/gax-go/v2/apierror"
 	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
@@ -19,8 +20,10 @@ import (
 
 // AllowCommitTimestamp represents a row from 'AllowCommitTimestamp'.
 type AllowCommitTimestamp struct {
-	ID        int64     `spanner:"ID" json:"ID"`               // ID
-	UpdatedAt time.Time `spanner:"UpdatedAt" json:"UpdatedAt"` // UpdatedAt
+	ID        int64            `spanner:"ID" json:"ID"`               // ID
+	EndsAt    spanner.NullTime `spanner:"EndsAt" json:"EndsAt"`       // EndsAt
+	CreatedAt time.Time        `spanner:"CreatedAt" json:"CreatedAt"` // CreatedAt
+	UpdatedAt time.Time        `spanner:"UpdatedAt" json:"UpdatedAt"` // UpdatedAt
 }
 
 func AllowCommitTimestampPrimaryKeys() []string {
@@ -32,6 +35,8 @@ func AllowCommitTimestampPrimaryKeys() []string {
 func AllowCommitTimestampColumns() []string {
 	return []string{
 		"ID",
+		"EndsAt",
+		"CreatedAt",
 		"UpdatedAt",
 	}
 }
@@ -39,6 +44,8 @@ func AllowCommitTimestampColumns() []string {
 func AllowCommitTimestampWritableColumns() []string {
 	return []string{
 		"ID",
+		"EndsAt",
+		"CreatedAt",
 		"UpdatedAt",
 	}
 }
@@ -54,6 +61,10 @@ func (act *AllowCommitTimestamp) columnsToPtrs(cols []string, customPtrs map[str
 		switch col {
 		case "ID":
 			ret = append(ret, &act.ID)
+		case "EndsAt":
+			ret = append(ret, &act.EndsAt)
+		case "CreatedAt":
+			ret = append(ret, &act.CreatedAt)
 		case "UpdatedAt":
 			ret = append(ret, &act.UpdatedAt)
 		default:
@@ -69,8 +80,12 @@ func (act *AllowCommitTimestamp) columnsToValues(cols []string) ([]interface{}, 
 		switch col {
 		case "ID":
 			ret = append(ret, act.ID)
+		case "EndsAt":
+			ret = append(ret, act.EndsAt)
+		case "CreatedAt":
+			ret = append(ret, act.CreatedAt)
 		case "UpdatedAt":
-			ret = append(ret, spanner.CommitTimestamp)
+			ret = append(ret, act.UpdatedAt)
 		default:
 			return nil, fmt.Errorf("unknown column: %s", col)
 		}
@@ -1868,6 +1883,183 @@ func (sc *SnakeCase) Delete(ctx context.Context) *spanner.Mutation {
 	return spanner.Delete("snake_cases", spanner.Key(values))
 }
 
+// UUIDType represents a row from 'UuidTypes'.
+type UUIDType struct {
+	ID         uuid.UUID        `spanner:"ID" json:"ID"`                 // ID
+	Name       string           `spanner:"Name" json:"Name"`             // Name
+	OptionalID spanner.NullUUID `spanner:"OptionalID" json:"OptionalID"` // OptionalID
+	CreatedAt  time.Time        `spanner:"CreatedAt" json:"CreatedAt"`   // CreatedAt
+}
+
+func UUIDTypePrimaryKeys() []string {
+	return []string{
+		"ID",
+	}
+}
+
+func UUIDTypeColumns() []string {
+	return []string{
+		"ID",
+		"Name",
+		"OptionalID",
+		"CreatedAt",
+	}
+}
+
+func UUIDTypeWritableColumns() []string {
+	return []string{
+		"ID",
+		"Name",
+		"OptionalID",
+		"CreatedAt",
+	}
+}
+
+func (ut *UUIDType) columnsToPtrs(cols []string, customPtrs map[string]interface{}) ([]interface{}, error) {
+	ret := make([]interface{}, 0, len(cols))
+	for _, col := range cols {
+		if val, ok := customPtrs[col]; ok {
+			ret = append(ret, val)
+			continue
+		}
+
+		switch col {
+		case "ID":
+			ret = append(ret, &ut.ID)
+		case "Name":
+			ret = append(ret, &ut.Name)
+		case "OptionalID":
+			ret = append(ret, &ut.OptionalID)
+		case "CreatedAt":
+			ret = append(ret, &ut.CreatedAt)
+		default:
+			return nil, fmt.Errorf("unknown column: %s", col)
+		}
+	}
+	return ret, nil
+}
+
+func (ut *UUIDType) columnsToValues(cols []string) ([]interface{}, error) {
+	ret := make([]interface{}, 0, len(cols))
+	for _, col := range cols {
+		switch col {
+		case "ID":
+			ret = append(ret, ut.ID)
+		case "Name":
+			ret = append(ret, ut.Name)
+		case "OptionalID":
+			ret = append(ret, ut.OptionalID)
+		case "CreatedAt":
+			ret = append(ret, ut.CreatedAt)
+		default:
+			return nil, fmt.Errorf("unknown column: %s", col)
+		}
+	}
+
+	return ret, nil
+}
+
+// newUUIDType_Decoder returns a decoder which reads a row from *spanner.Row
+// into UUIDType. The decoder is not goroutine-safe. Don't use it concurrently.
+func newUUIDType_Decoder(cols []string) func(*spanner.Row) (*UUIDType, error) {
+	customPtrs := map[string]interface{}{}
+
+	return func(row *spanner.Row) (*UUIDType, error) {
+		var ut UUIDType
+		ptrs, err := ut.columnsToPtrs(cols, customPtrs)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := row.Columns(ptrs...); err != nil {
+			return nil, err
+		}
+
+		return &ut, nil
+	}
+}
+
+// Insert returns a Mutation to insert a row into a table. If the row already
+// exists, the write or transaction fails.
+func (ut *UUIDType) Insert(ctx context.Context) *spanner.Mutation {
+	values, _ := ut.columnsToValues(UUIDTypeWritableColumns())
+	return spanner.Insert("UuidTypes", UUIDTypeWritableColumns(), values)
+}
+
+// Update returns a Mutation to update a row in a table. If the row does not
+// already exist, the write or transaction fails.
+func (ut *UUIDType) Update(ctx context.Context) *spanner.Mutation {
+	values, _ := ut.columnsToValues(UUIDTypeWritableColumns())
+	return spanner.Update("UuidTypes", UUIDTypeWritableColumns(), values)
+}
+
+// InsertOrUpdate returns a Mutation to insert a row into a table. If the row
+// already exists, it updates it instead. Any column values not explicitly
+// written are preserved.
+func (ut *UUIDType) InsertOrUpdate(ctx context.Context) *spanner.Mutation {
+	values, _ := ut.columnsToValues(UUIDTypeWritableColumns())
+	return spanner.InsertOrUpdate("UuidTypes", UUIDTypeWritableColumns(), values)
+}
+
+// UpdateColumns returns a Mutation to update specified columns of a row in a table.
+func (ut *UUIDType) UpdateColumns(ctx context.Context, cols ...string) (*spanner.Mutation, error) {
+	// add primary keys to columns to update by primary keys
+	colsWithPKeys := append(cols, UUIDTypePrimaryKeys()...)
+
+	values, err := ut.columnsToValues(colsWithPKeys)
+	if err != nil {
+		return nil, newErrorWithCode(codes.InvalidArgument, "UUIDType.UpdateColumns", "UuidTypes", err)
+	}
+
+	return spanner.Update("UuidTypes", colsWithPKeys, values), nil
+}
+
+// FindUUIDType gets a UUIDType by primary key
+func FindUUIDType(ctx context.Context, db YORODB, id uuid.UUID) (*UUIDType, error) {
+	key := spanner.Key{id}
+	row, err := db.ReadRow(ctx, "UuidTypes", key, UUIDTypeColumns())
+	if err != nil {
+		return nil, newError("FindUUIDType", "UuidTypes", err)
+	}
+
+	decoder := newUUIDType_Decoder(UUIDTypeColumns())
+	ut, err := decoder(row)
+	if err != nil {
+		return nil, newErrorWithCode(codes.Internal, "FindUUIDType", "UuidTypes", err)
+	}
+
+	return ut, nil
+}
+
+// ReadUUIDType retrieves multiples rows from UUIDType by KeySet as a slice.
+func ReadUUIDType(ctx context.Context, db YORODB, keys spanner.KeySet) ([]*UUIDType, error) {
+	var res []*UUIDType
+
+	decoder := newUUIDType_Decoder(UUIDTypeColumns())
+
+	rows := db.Read(ctx, "UuidTypes", keys, UUIDTypeColumns())
+	err := rows.Do(func(row *spanner.Row) error {
+		ut, err := decoder(row)
+		if err != nil {
+			return err
+		}
+		res = append(res, ut)
+
+		return nil
+	})
+	if err != nil {
+		return nil, newErrorWithCode(codes.Internal, "ReadUUIDType", "UuidTypes", err)
+	}
+
+	return res, nil
+}
+
+// Delete deletes the UUIDType from the database.
+func (ut *UUIDType) Delete(ctx context.Context) *spanner.Mutation {
+	values, _ := ut.columnsToValues(UUIDTypePrimaryKeys())
+	return spanner.Delete("UuidTypes", spanner.Key(values))
+}
+
 // FindCompositePrimaryKeysByError retrieves multiple rows from 'CompositePrimaryKeys' as a slice of CompositePrimaryKey.
 //
 // Generated from index 'CompositePrimaryKeysByError'.
@@ -1915,7 +2107,7 @@ func FindCompositePrimaryKeysByError(ctx context.Context, db YORODB, e int64) ([
 // used for primary key, index key and storing columns. If you need more columns, add storing
 // columns or Read by primary key or Query with join.
 //
-// Generated from unique index 'CompositePrimaryKeysByError'.
+// Generated from index 'CompositePrimaryKeysByError'.
 func ReadCompositePrimaryKeysByError(ctx context.Context, db YORODB, keys spanner.KeySet) ([]*CompositePrimaryKey, error) {
 	var res []*CompositePrimaryKey
 	columns := []string{
@@ -1990,7 +2182,7 @@ func FindCompositePrimaryKeysByZError(ctx context.Context, db YORODB, e int64) (
 // used for primary key, index key and storing columns. If you need more columns, add storing
 // columns or Read by primary key or Query with join.
 //
-// Generated from unique index 'CompositePrimaryKeysByError2'.
+// Generated from index 'CompositePrimaryKeysByError2'.
 func ReadCompositePrimaryKeysByZError(ctx context.Context, db YORODB, keys spanner.KeySet) ([]*CompositePrimaryKey, error) {
 	var res []*CompositePrimaryKey
 	columns := []string{
@@ -2066,7 +2258,7 @@ func FindCompositePrimaryKeysByZYError(ctx context.Context, db YORODB, e int64) 
 // used for primary key, index key and storing columns. If you need more columns, add storing
 // columns or Read by primary key or Query with join.
 //
-// Generated from unique index 'CompositePrimaryKeysByError3'.
+// Generated from index 'CompositePrimaryKeysByError3'.
 func ReadCompositePrimaryKeysByZYError(ctx context.Context, db YORODB, keys spanner.KeySet) ([]*CompositePrimaryKey, error) {
 	var res []*CompositePrimaryKey
 	columns := []string{
@@ -2144,7 +2336,7 @@ func FindCompositePrimaryKeysByXY(ctx context.Context, db YORODB, x string, y st
 // used for primary key, index key and storing columns. If you need more columns, add storing
 // columns or Read by primary key or Query with join.
 //
-// Generated from unique index 'CompositePrimaryKeysByXY'.
+// Generated from index 'CompositePrimaryKeysByXY'.
 func ReadCompositePrimaryKeysByXY(ctx context.Context, db YORODB, keys spanner.KeySet) ([]*CompositePrimaryKey, error) {
 	var res []*CompositePrimaryKey
 	columns := []string{
@@ -2217,7 +2409,7 @@ func FindFullTypeByFTString(ctx context.Context, db YORODB, fTString string) (*F
 // used for primary key, index key and storing columns. If you need more columns, add storing
 // columns or Read by primary key or Query with join.
 //
-// Generated from unique index 'FullTypesByFTString'.
+// Generated from index 'FullTypesByFTString'.
 func ReadFullTypeByFTString(ctx context.Context, db YORODB, keys spanner.KeySet) ([]*FullType, error) {
 	var res []*FullType
 	columns := []string{
@@ -2300,7 +2492,7 @@ func FindFullTypesByFTIntFTTimestampNull(ctx context.Context, db YORODB, fTInt i
 // used for primary key, index key and storing columns. If you need more columns, add storing
 // columns or Read by primary key or Query with join.
 //
-// Generated from unique index 'FullTypesByInTimestampNull'.
+// Generated from index 'FullTypesByInTimestampNull'.
 func ReadFullTypesByFTIntFTTimestampNull(ctx context.Context, db YORODB, keys spanner.KeySet) ([]*FullType, error) {
 	var res []*FullType
 	columns := []string{
@@ -2376,7 +2568,7 @@ func FindFullTypesByFTIntFTDate(ctx context.Context, db YORODB, fTInt int64, fTD
 // used for primary key, index key and storing columns. If you need more columns, add storing
 // columns or Read by primary key or Query with join.
 //
-// Generated from unique index 'FullTypesByIntDate'.
+// Generated from index 'FullTypesByIntDate'.
 func ReadFullTypesByFTIntFTDate(ctx context.Context, db YORODB, keys spanner.KeySet) ([]*FullType, error) {
 	var res []*FullType
 	columns := []string{
@@ -2452,7 +2644,7 @@ func FindFullTypesByFTIntFTTimestamp(ctx context.Context, db YORODB, fTInt int64
 // used for primary key, index key and storing columns. If you need more columns, add storing
 // columns or Read by primary key or Query with join.
 //
-// Generated from unique index 'FullTypesByIntTimestamp'.
+// Generated from index 'FullTypesByIntTimestamp'.
 func ReadFullTypesByFTIntFTTimestamp(ctx context.Context, db YORODB, keys spanner.KeySet) ([]*FullType, error) {
 	var res []*FullType
 	columns := []string{
@@ -2527,7 +2719,7 @@ func FindFullTypesByFTTimestamp(ctx context.Context, db YORODB, fTTimestamp time
 // used for primary key, index key and storing columns. If you need more columns, add storing
 // columns or Read by primary key or Query with join.
 //
-// Generated from unique index 'FullTypesByTimestamp'.
+// Generated from index 'FullTypesByTimestamp'.
 func ReadFullTypesByFTTimestamp(ctx context.Context, db YORODB, keys spanner.KeySet) ([]*FullType, error) {
 	var res []*FullType
 	columns := []string{
@@ -2602,7 +2794,7 @@ func FindSnakeCasesByStringIDFooBarBaz(ctx context.Context, db YORODB, stringID 
 // used for primary key, index key and storing columns. If you need more columns, add storing
 // columns or Read by primary key or Query with join.
 //
-// Generated from unique index 'snake_cases_by_string_id'.
+// Generated from index 'snake_cases_by_string_id'.
 func ReadSnakeCasesByStringIDFooBarBaz(ctx context.Context, db YORODB, keys spanner.KeySet) ([]*SnakeCase, error) {
 	var res []*SnakeCase
 	columns := []string{
@@ -2625,6 +2817,158 @@ func ReadSnakeCasesByStringIDFooBarBaz(ctx context.Context, db YORODB, keys span
 	})
 	if err != nil {
 		return nil, newErrorWithCode(codes.Internal, "ReadSnakeCasesByStringIDFooBarBaz", "snake_cases", err)
+	}
+
+	return res, nil
+}
+
+// FindUUIDTypeByName retrieves a row from 'UuidTypes' as a UUIDType.
+//
+// If no row is present with the given key, then ReadRow returns an error where
+// spanner.ErrCode(err) is codes.NotFound.
+//
+// Generated from unique index 'UuidTypesByName'.
+func FindUUIDTypeByName(ctx context.Context, db YORODB, name string) (*UUIDType, error) {
+	const sqlstr = "SELECT " +
+		"ID, Name, OptionalID, CreatedAt " +
+		"FROM UuidTypes@{FORCE_INDEX=UuidTypesByName} " +
+		"WHERE Name = @param0"
+
+	stmt := spanner.NewStatement(sqlstr)
+	stmt.Params["param0"] = name
+
+	decoder := newUUIDType_Decoder(UUIDTypeColumns())
+
+	// run query
+	YOLog(ctx, sqlstr, name)
+	iter := db.Query(ctx, stmt)
+	defer iter.Stop()
+
+	row, err := iter.Next()
+	if err != nil {
+		if err == iterator.Done {
+			return nil, newErrorWithCode(codes.NotFound, "FindUUIDTypeByName", "UuidTypes", err)
+		}
+		return nil, newError("FindUUIDTypeByName", "UuidTypes", err)
+	}
+
+	ut, err := decoder(row)
+	if err != nil {
+		return nil, newErrorWithCode(codes.Internal, "FindUUIDTypeByName", "UuidTypes", err)
+	}
+
+	return ut, nil
+}
+
+// ReadUUIDTypeByName retrieves multiples rows from 'UuidTypes' by KeySet as a slice.
+//
+// This does not retrieve all columns of 'UuidTypes' because an index has only columns
+// used for primary key, index key and storing columns. If you need more columns, add storing
+// columns or Read by primary key or Query with join.
+//
+// Generated from index 'UuidTypesByName'.
+func ReadUUIDTypeByName(ctx context.Context, db YORODB, keys spanner.KeySet) ([]*UUIDType, error) {
+	var res []*UUIDType
+	columns := []string{
+		"ID",
+		"Name",
+	}
+
+	decoder := newUUIDType_Decoder(columns)
+
+	rows := db.ReadUsingIndex(ctx, "UuidTypes", "UuidTypesByName", keys, columns)
+	err := rows.Do(func(row *spanner.Row) error {
+		ut, err := decoder(row)
+		if err != nil {
+			return err
+		}
+		res = append(res, ut)
+
+		return nil
+	})
+	if err != nil {
+		return nil, newErrorWithCode(codes.Internal, "ReadUUIDTypeByName", "UuidTypes", err)
+	}
+
+	return res, nil
+}
+
+// FindUUIDTypesByOptionalID retrieves multiple rows from 'UuidTypes' as a slice of UUIDType.
+//
+// Generated from index 'UuidTypesByOptionalID'.
+func FindUUIDTypesByOptionalID(ctx context.Context, db YORODB, optionalID spanner.NullUUID) ([]*UUIDType, error) {
+	var sqlstr = "SELECT " +
+		"ID, Name, OptionalID, CreatedAt " +
+		"FROM UuidTypes@{FORCE_INDEX=UuidTypesByOptionalID} "
+
+	conds := make([]string, 1)
+	if optionalID.IsNull() {
+		conds[0] = "OptionalID IS NULL"
+	} else {
+		conds[0] = "OptionalID = @param0"
+	}
+	sqlstr += "WHERE " + strings.Join(conds, " AND ")
+
+	stmt := spanner.NewStatement(sqlstr)
+	stmt.Params["param0"] = optionalID
+
+	decoder := newUUIDType_Decoder(UUIDTypeColumns())
+
+	// run query
+	YOLog(ctx, sqlstr, optionalID)
+	iter := db.Query(ctx, stmt)
+	defer iter.Stop()
+
+	// load results
+	res := []*UUIDType{}
+	for {
+		row, err := iter.Next()
+		if err != nil {
+			if err == iterator.Done {
+				break
+			}
+			return nil, newError("FindUUIDTypesByOptionalID", "UuidTypes", err)
+		}
+
+		ut, err := decoder(row)
+		if err != nil {
+			return nil, newErrorWithCode(codes.Internal, "FindUUIDTypesByOptionalID", "UuidTypes", err)
+		}
+
+		res = append(res, ut)
+	}
+
+	return res, nil
+}
+
+// ReadUUIDTypesByOptionalID retrieves multiples rows from 'UuidTypes' by KeySet as a slice.
+//
+// This does not retrieve all columns of 'UuidTypes' because an index has only columns
+// used for primary key, index key and storing columns. If you need more columns, add storing
+// columns or Read by primary key or Query with join.
+//
+// Generated from index 'UuidTypesByOptionalID'.
+func ReadUUIDTypesByOptionalID(ctx context.Context, db YORODB, keys spanner.KeySet) ([]*UUIDType, error) {
+	var res []*UUIDType
+	columns := []string{
+		"ID",
+		"OptionalID",
+	}
+
+	decoder := newUUIDType_Decoder(columns)
+
+	rows := db.ReadUsingIndex(ctx, "UuidTypes", "UuidTypesByOptionalID", keys, columns)
+	err := rows.Do(func(row *spanner.Row) error {
+		ut, err := decoder(row)
+		if err != nil {
+			return err
+		}
+		res = append(res, ut)
+
+		return nil
+	})
+	if err != nil {
+		return nil, newErrorWithCode(codes.Internal, "ReadUUIDTypesByOptionalID", "UuidTypes", err)
 	}
 
 	return res, nil

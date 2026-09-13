@@ -13,8 +13,10 @@ import (
 
 // AllowCommitTimestamp represents a row from 'AllowCommitTimestamp'.
 type AllowCommitTimestamp struct {
-	ID        int64     `spanner:"ID" json:"ID"`               // ID
-	UpdatedAt time.Time `spanner:"UpdatedAt" json:"UpdatedAt"` // UpdatedAt
+	ID        int64            `spanner:"ID" json:"ID"`               // ID
+	EndsAt    spanner.NullTime `spanner:"EndsAt" json:"EndsAt"`       // EndsAt
+	CreatedAt time.Time        `spanner:"CreatedAt" json:"CreatedAt"` // CreatedAt
+	UpdatedAt time.Time        `spanner:"UpdatedAt" json:"UpdatedAt"` // UpdatedAt
 }
 
 func AllowCommitTimestampPrimaryKeys() []string {
@@ -26,6 +28,8 @@ func AllowCommitTimestampPrimaryKeys() []string {
 func AllowCommitTimestampColumns() []string {
 	return []string{
 		"ID",
+		"EndsAt",
+		"CreatedAt",
 		"UpdatedAt",
 	}
 }
@@ -33,6 +37,8 @@ func AllowCommitTimestampColumns() []string {
 func AllowCommitTimestampWritableColumns() []string {
 	return []string{
 		"ID",
+		"EndsAt",
+		"CreatedAt",
 		"UpdatedAt",
 	}
 }
@@ -48,6 +54,10 @@ func (act *AllowCommitTimestamp) columnsToPtrs(cols []string, customPtrs map[str
 		switch col {
 		case "ID":
 			ret = append(ret, &act.ID)
+		case "EndsAt":
+			ret = append(ret, &act.EndsAt)
+		case "CreatedAt":
+			ret = append(ret, &act.CreatedAt)
 		case "UpdatedAt":
 			ret = append(ret, &act.UpdatedAt)
 		default:
@@ -63,8 +73,12 @@ func (act *AllowCommitTimestamp) columnsToValues(cols []string) ([]interface{}, 
 		switch col {
 		case "ID":
 			ret = append(ret, act.ID)
+		case "EndsAt":
+			ret = append(ret, act.EndsAt)
+		case "CreatedAt":
+			ret = append(ret, act.CreatedAt)
 		case "UpdatedAt":
-			ret = append(ret, spanner.CommitTimestamp)
+			ret = append(ret, act.UpdatedAt)
 		default:
 			return nil, fmt.Errorf("unknown column: %s", col)
 		}

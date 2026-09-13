@@ -31,6 +31,7 @@ import (
 	"cloud.google.com/go/civil"
 	"cloud.google.com/go/spanner"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/uuid"
 	"github.com/googleapis/gax-go/v2/apierror"
 	default_models "go.mercari.io/yo/v2/test/testmodels/default"
 	legacy_models "go.mercari.io/yo/v2/test/testmodels/legacy_default"
@@ -1282,5 +1283,116 @@ func TestInflectionzz(t *testing.T) {
 		if diff := cmp.Diff(cpk, got[0]); diff != "" {
 			t.Errorf("(-got, +want)\n%s", diff)
 		}
+	})
+}
+
+func TestUuidTypes(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := testutil.DeleteAllData(ctx, client); err != nil {
+		t.Fatalf("failed to clear data: %v", err)
+	}
+
+	uuid1 := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+	uuid2 := uuid.MustParse("223e4567-e89b-12d3-a456-426614174000")
+
+	uuidTypeWithOptional := &default_models.UUIDType{
+		ID:         uuid1,
+		Name:       "with_optional_id",
+		OptionalID: spanner.NullUUID{UUID: uuid2, Valid: true},
+		CreatedAt:  time.Now(),
+	}
+
+	uuidTypeWithoutOptional := &default_models.UUIDType{
+		ID:         uuid2,
+		Name:       "without_optional_id",
+		OptionalID: spanner.NullUUID{Valid: false},
+		CreatedAt:  time.Now(),
+	}
+
+	if _, err := client.Apply(ctx, []*spanner.Mutation{
+		uuidTypeWithOptional.Insert(ctx),
+		uuidTypeWithoutOptional.Insert(ctx),
+	}); err != nil {
+		t.Fatalf("Apply failed: %v", err)
+	}
+
+	t.Run("with_optional_id", func(t *testing.T) {
+		t.Run("FindByPrimaryKey", func(t *testing.T) {
+			got, err := default_models.FindUUIDType(ctx, client.Single(), uuid1)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			if diff := cmp.Diff(uuidTypeWithOptional, got); diff != "" {
+				t.Errorf("(-got, +want)\n%s", diff)
+			}
+		})
+
+		t.Run("FindByUniqueIndex", func(t *testing.T) {
+			got, err := default_models.FindUUIDTypeByUUIDTypesByName(ctx, client.Single(), "with_optional_id")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			if diff := cmp.Diff(uuidTypeWithOptional, got); diff != "" {
+				t.Errorf("(-got, +want)\n%s", diff)
+			}
+		})
+
+		t.Run("FindByIndex", func(t *testing.T) {
+			got, err := default_models.FindUUIDTypesByUUIDTypesByOptionalID(ctx, client.Single(), spanner.NullUUID{UUID: uuid2, Valid: true})
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			if len(got) != 1 {
+				t.Fatalf("expect the number of rows %v, but got %v", 1, len(got))
+			}
+
+			if diff := cmp.Diff(uuidTypeWithOptional, got[0]); diff != "" {
+				t.Errorf("(-got, +want)\n%s", diff)
+			}
+		})
+	})
+
+	t.Run("without_optional_id", func(t *testing.T) {
+		t.Run("FindByPrimaryKey", func(t *testing.T) {
+			got, err := default_models.FindUUIDType(ctx, client.Single(), uuid2)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			if diff := cmp.Diff(uuidTypeWithoutOptional, got); diff != "" {
+				t.Errorf("(-got, +want)\n%s", diff)
+			}
+		})
+
+		t.Run("FindByUniqueIndex", func(t *testing.T) {
+			got, err := default_models.FindUUIDTypeByUUIDTypesByName(ctx, client.Single(), "without_optional_id")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			if diff := cmp.Diff(uuidTypeWithoutOptional, got); diff != "" {
+				t.Errorf("(-got, +want)\n%s", diff)
+			}
+		})
+
+		t.Run("FindByIndexNull", func(t *testing.T) {
+			got, err := default_models.FindUUIDTypesByUUIDTypesByOptionalID(ctx, client.Single(), spanner.NullUUID{Valid: false})
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			if len(got) != 1 {
+				t.Fatalf("expect the number of rows %v, but got %v", 1, len(got))
+			}
+
+			if diff := cmp.Diff(uuidTypeWithoutOptional, got[0]); diff != "" {
+				t.Errorf("(-got, +want)\n%s", diff)
+			}
+		})
 	})
 }

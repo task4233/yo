@@ -171,3 +171,13 @@ CREATE TABLE Inflectionzz (
   X STRING(32) NOT NULL,
   Y STRING(32) NOT NULL,
 ) PRIMARY KEY(X);
+
+CREATE TABLE UuidTypes (
+  ID UUID NOT NULL,
+  Name STRING(100) NOT NULL,
+  OptionalID UUID,
+  CreatedAt TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
+) PRIMARY KEY(ID);
+
+CREATE UNIQUE INDEX UuidTypesByName ON UuidTypes(Name);
+CREATE INDEX UuidTypesByOptionalID ON UuidTypes(OptionalID);

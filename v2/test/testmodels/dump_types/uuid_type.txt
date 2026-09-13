@@ -1,0 +1,15 @@
+# Field list of UUIDType
+
+* ID UUID uuid.UUID
+* Name STRING(100) string
+* OptionalID UUID spanner.NullUUID
+* CreatedAt TIMESTAMP time.Time
+
+# Primary Key
+
+* ID UUID uuid.UUID
+
+# Index list of UUIDType
+
+* UuidTypesByName
+* UuidTypesByOptionalID

@@ -425,7 +425,8 @@ func (a *Generator) nullcheck(field *models.Field) string {
 		"spanner.NullFloat64",
 		"spanner.NullBool",
 		"spanner.NullTime",
-		"spanner.NullDate":
+		"spanner.NullDate",
+		"spanner.NullUUID":
 		return fmt.Sprintf("%s.IsNull()", paramName)
 	}
 
